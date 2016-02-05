@@ -1,15 +1,20 @@
-#coding: utf-8
+# coding: utf-8
 
 from django.http import HttpResponse
 from django.template.response import TemplateResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 
 from robokassa.conf import USE_POST
 from robokassa.forms import ResultURLForm, SuccessRedirectForm, FailRedirectForm
 from robokassa.models import SuccessNotification
 from robokassa.signals import result_received, success_page_visited, fail_page_visited
 
+method = 'POST' if USE_POST else 'GET'
+
+
 @csrf_exempt
+@require_http_methods([method, ])
 def receive_result(request):
     """ обработчик для ResultURL. """
     data = request.POST if USE_POST else request.GET
@@ -32,6 +37,7 @@ def receive_result(request):
 
 
 @csrf_exempt
+@require_http_methods([method, ])
 def success(request, template_name='robokassa/success.html', extra_context=None,
             error_template_name = 'robokassa/error.html'):
     """ обработчик для SuccessURL """
@@ -55,6 +61,7 @@ def success(request, template_name='robokassa/success.html', extra_context=None,
 
 
 @csrf_exempt
+@require_http_methods([method, ])
 def fail(request, template_name='robokassa/fail.html', extra_context=None,
          error_template_name = 'robokassa/error.html'):
     """ обработчик для FailURL """
@@ -76,4 +83,3 @@ def fail(request, template_name='robokassa/fail.html', extra_context=None,
         return TemplateResponse(request, template_name, context)
 
     return TemplateResponse(request, error_template_name, {'form': form})
-
